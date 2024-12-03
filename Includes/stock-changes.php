@@ -27,6 +27,12 @@ function mktska_guardar_cambio_stock_meta($product, $updated_props) {
 
     // Verificar si la propiedad 'stock_quantity' está entre las actualizadas
     if (in_array('stock_quantity', $updated_props)) {
+        // Verificar si el cambio proviene del POS
+        if (isset($_POST['action']) && $_POST['action'] === 'yith_pos_update_stock') {
+            // No registrar cambios de stock realizados por el POS
+            return;
+        }
+
         $old_stock = isset($product->old_stock) ? $product->old_stock : $product->get_stock_quantity('edit');
         $new_stock = $product->get_stock_quantity();
 
