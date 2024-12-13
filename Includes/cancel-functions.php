@@ -4,7 +4,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Hook para capturar cancelaciones de pedidos en WooCommerce
-add_action('woocommerce_order_status_cancelled', 'mktska_guardar_detalles_cancelacion');
+
+add_action('woocommerce_order_status_cancelled', 'mktska_guardar_detalles_cancelacion', 5);
 
 /**
  * Función para gestionar la cancelación de pedidos y actualizar el inventario
@@ -12,16 +13,24 @@ add_action('woocommerce_order_status_cancelled', 'mktska_guardar_detalles_cancel
  * @param int $order_id ID del pedido cancelado en WooCommerce.
  */
 function mktska_guardar_detalles_cancelacion($order_id) {
+    error_log("Hook 'woocommerce_order_status_cancelled' activado para la orden ID: $order_id");
     global $wpdb;
     $table_name = $wpdb->prefix . 'stock_history';
 
     // Obtener la orden con base en su ID
     $order = wc_get_order($order_id);
 
+    if (!$order) {
+        error_log("Error: No se pudo obtener la orden con ID: " . $order_id);
+        return;
+    }
+
     // Iterar a través de todos los productos en la orden
     foreach ($order->get_items() as $item_id => $item) {
         $product_id = $item->get_product_id(); // Obtener el ID del producto
         $quantity = $item->get_quantity(); // Cantidad comprada del producto
+
+        error_log("Procesando cancelación para producto ID: " . $product_id . " con cantidad: " . $quantity);
         $order_number = $order->get_order_number(); // Número de la orden
         $order_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(); // Nombre del cliente
         $cancelled_by = wp_get_current_user()->user_login; // Usuario que canceló la orden
