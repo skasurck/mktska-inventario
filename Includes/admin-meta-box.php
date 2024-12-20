@@ -35,26 +35,49 @@ function mktska_mostrar_historial_stock() {
                 // Mostrar ventas
                 if (!empty($stockvalue['sale_details'])) {
                     $sale_details = maybe_unserialize($stockvalue['sale_details']);
-                    echo '<p>Fecha y hora: ' . $datetime->format('d/m/Y g:i a') . '</p>';
-                    echo '<p>Venta registrada:</p>';
-                    echo '<p> - Cantidad vendida: ' . $stockvalue['quantity'] . '</p>';
-                    echo '<p> - Nombre del cliente: ' . (!empty($sale_details['order_name']) ? $sale_details['order_name'] : 'Cliente Anónimo') . '</p>';
-                    echo '<p> - Orden Número: ' . $sale_details['order_number'] . '</p>';
-                    echo '<p> - Método de venta: ' . ($sale_details['is_pos_sale'] ? '<strong>POS</strong>' : '<strong>Tienda en línea</strong>') . '</p>';
-                    echo '<p> - Cambio de inventario: ' . $stockvalue['stock'] . ' -> ' . $stockvalue['new_stock'] . '</p>';
+                
+                    // Obtener el ID del pedido
+                    $order_id = $sale_details['order_number'];
+                    $order = wc_get_order($order_id);
+                    
+                    // Obtener el estado del pedido en un formato legible
+                    $order_status = $order ? wc_get_order_status_name($order->get_status()) : 'Desconocido';
+                
+                    // Si el nombre está vacío, usar "Cliente Anónimo"
+                    $order_name = (isset($sale_details['order_name']) && !empty(trim($sale_details['order_name']))) ? $sale_details['order_name'] : 'Cliente Anónimo';
+                    // Determinar método de venta: si no hay nombre, asumimos POS, si hay nombre, Tienda en línea
+                    $metodo_venta = (isset($sale_details['order_name']) && !empty(trim($sale_details['order_name']))) ? '<strong>Tienda en línea</strong>' : '<strong>POS</strong>';
+
+                
+                    // Calcular stock anterior (stock + cantidad vendida)
+                    $stockantes = $stockvalue['stock'] + $stockvalue['quantity'];
+                
+                    echo '<p><strong>Fecha y hora: ' . $datetime->format('d/m/Y g:i a') . '</strong></p>';
+                    echo '<ul>';
+                    echo '  <li style="color: green;"><strong>Venta registrada</strong></li>';
+                    echo '  <li><strong>Cantidad vendida: </strong>' . $stockvalue['quantity'] . '</li>';
+                    echo '  <li><strong>Nombre del cliente: </strong>' . $order_name . '</li>';
+                    echo '  <li><strong>Orden Número: </strong>' . $order_id . '</li>';
+                    echo '  <li><strong>Estado del pedido: </strong>' . $order_status . '</li>';
+                    echo '  <li><strong>Método de venta: </strong>' . $metodo_venta . '</li>';
+                    echo '  <li><strong>Cambio de inventario: </strong>' . $stockantes . ' -> ' . $stockvalue['new_stock'] . '</li>';
+                    echo '</ul>';
                     echo '<p>-------------------</p>';
                 }
+                
             
                 // Mostrar cancelaciones
                 elseif (!empty($stockvalue['cancel_details'])) {
                     $cancel_details = maybe_unserialize($stockvalue['cancel_details']);
-                    echo '<p>Fecha y hora: ' . $datetime->format('d/m/Y g:i a') . '</p>';
-                    echo '<p>Cancelación registrada:</p>';
-                    echo '<p> - Cantidad cancelada: ' . $stockvalue['quantity_cancelled'] . '</p>';
-                    echo '<p> - Cancelada por: ' . $cancel_details['cancelled_by'] . '</p>';
-                    echo '<p> - Orden Número: ' . $cancel_details['order_number'] . '</p>';
-                    echo '<p> - Cliente: ' . $cancel_details['order_name'] . '</p>';
-                    echo '<p> - Cambio de inventario: ' . $stockvalue['stock'] . ' -> ' . $stockvalue['new_stock'] . '</p>';
+                    echo '<p><strong>Fecha y hora: ' . $datetime->format('d/m/Y g:i a') . '</strong></p>';
+                    echo '<ul>';
+                    echo '  <li style="color:red;"><strong>Cancelación registrada</strong></li>';
+                    echo '  <li><strong>Cantidad cancelada:</strong> <span>' . $stockvalue['quantity_cancelled'] . '</span></li>';
+                    echo '  <li><strong>Cancelada por:</strong> ' . $cancel_details['cancelled_by'] . '</li>';
+                    echo '  <li><strong>Orden Número:</strong> ' . $cancel_details['order_number'] . '</li>';
+                    echo '  <li><strong>Cliente:</strong> ' . $cancel_details['order_name'] . '</li>';
+                    echo '  <li><strong>Cambio de inventario:</strong> ' . $stockvalue['stock'] . ' -> ' . $stockvalue['new_stock'] . '</li>';
+                    echo '</ul>';
                     echo '<p>-------------------</p>';
                 }
             

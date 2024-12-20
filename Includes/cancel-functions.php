@@ -13,7 +13,6 @@ add_action('woocommerce_order_status_cancelled', 'mktska_guardar_detalles_cancel
  * @param int $order_id ID del pedido cancelado en WooCommerce.
  */
 function mktska_guardar_detalles_cancelacion($order_id) {
-    error_log("Hook 'woocommerce_order_status_cancelled' activado para la orden ID: $order_id");
     global $wpdb;
     $table_name = $wpdb->prefix . 'stock_history';
 
@@ -21,7 +20,7 @@ function mktska_guardar_detalles_cancelacion($order_id) {
     $order = wc_get_order($order_id);
 
     if (!$order) {
-        error_log("Error: No se pudo obtener la orden con ID: " . $order_id);
+        mktska_escribir_log("Error: No se pudo obtener la orden con ID: " . $order_id);
         return;
     }
 
@@ -30,7 +29,6 @@ function mktska_guardar_detalles_cancelacion($order_id) {
         $product_id = $item->get_product_id(); // Obtener el ID del producto
         $quantity = $item->get_quantity(); // Cantidad comprada del producto
 
-        error_log("Procesando cancelación para producto ID: " . $product_id . " con cantidad: " . $quantity);
         $order_number = $order->get_order_number(); // Número de la orden
         $order_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(); // Nombre del cliente
         $cancelled_by = wp_get_current_user()->user_login; // Usuario que canceló la orden
@@ -69,17 +67,18 @@ function mktska_guardar_detalles_cancelacion($order_id) {
             $wpdb->insert(
                 $table_name,
                 array(
-                    'timestamp' => current_time('mysql'), // Fecha y hora de la cancelación
-                    'product_id' => $product_id, // ID del producto
-                    'stock' => $old_stock, // Inventario antes de la cancelación
-                    'new_stock' => $new_stock, // Inventario después de la cancelación
-                    'quantity_cancelled' => $quantity, // Cantidad cancelada
-                    'quantity' => 0, // Inicializar cantidad vendida como 0 para cancelaciones sin ventas
-                    'stock_change_meta' => maybe_serialize($cancel_details), // Detalles del cambio de inventario
-                    'cancel_details' => maybe_serialize($cancel_details) // Detalles de la cancelación
+                    'timestamp' => current_time('mysql'),
+                    'product_id' => $product_id,
+                    'stock' => $old_stock,
+                    'new_stock' => $new_stock,
+                    'quantity_cancelled' => $quantity,
+                    'quantity' => 0,
+                    'stock_change_meta' => maybe_serialize($cancel_details),
+                    'cancel_details' => maybe_serialize($cancel_details)
                 ),
-                array('%s', '%d', '%d', '%d', '%d', '%d', '%s', '%s') // Formato de datos
-            );            
+                array('%s', '%d', '%d', '%d', '%d', '%d', '%s', '%s')
+            );
+                        
         }
     }
 }

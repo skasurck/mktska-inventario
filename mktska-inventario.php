@@ -15,11 +15,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 date_default_timezone_set('America/Mexico_City');
 
 // Definir constantes para las rutas
+// Definir constantes para las rutas
 define( 'MKTSKA_INVENTARIO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MKTSKA_INVENTARIO_URL', plugin_dir_url( __FILE__ ) );
 
 // Ruta personalizada para el archivo de log
-define( 'MKTSKA_DEBUG_LOG', MKTSKA_INVENTARIO_PATH . 'debug.log' );
+define( 'MKTSKA_DEBUG_LOG', MKTSKA_INVENTARIO_PATH . 'mktdebug.log' );
 
 // Función para escribir logs con marca de tiempo
 function mktska_escribir_log($mensaje) {
@@ -28,7 +29,7 @@ function mktska_escribir_log($mensaje) {
     file_put_contents(MKTSKA_DEBUG_LOG, $mensaje_log, FILE_APPEND);
 }
 
-// Ejemplo de uso en init
+/* Ejemplo de uso en init
 add_action('init', function() {
     if (class_exists('WooCommerce')) {
         // Hook para ventas
@@ -41,7 +42,7 @@ add_action('init', function() {
     } else {
         mktska_escribir_log("WooCommerce no está activo, hooks no registrados.");
     }
-});
+});*/
 
 // Incluir archivos necesarios
 require_once MKTSKA_INVENTARIO_PATH . 'includes/db-functions.php';
