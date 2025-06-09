@@ -1,6 +1,6 @@
 # Mktska Inventario
 
-**Versión:** 1.0.1  
+**Versión:** 1.0.2  
 **Autor:** Mktska  
 **Plugin URI:** [http://mktska.com](http://mktska.com)  
 **Autor URI:** [http://mktska.com](http://mktska.com)

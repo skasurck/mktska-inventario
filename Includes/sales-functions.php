@@ -52,6 +52,10 @@ function mktska_guardar_detalles_venta($order_input) {
         $order_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
 
         $product = wc_get_product($product_id);
+        if ( ! $product ) {
+            mktska_escribir_log("No se pudo obtener el producto con ID {$product_id}");
+            continue;
+        }
 
         // Para ventas POS, intentar usar _original_stock si está disponible.
         if ($is_pos_sale && isset($_POST['_original_stock'])) {
