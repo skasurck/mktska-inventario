@@ -25,8 +25,25 @@ define( 'MKTSKA_DEBUG_LOG', MKTSKA_INVENTARIO_PATH . 'mktdebug.log' );
 // Función para escribir logs con marca de tiempo
 function mktska_escribir_log($mensaje) {
     $marca_tiempo = date('Y-m-d H:i:s');
-    $mensaje_log = "[{$marca_tiempo}] {$mensaje}\n";
-    file_put_contents(MKTSKA_DEBUG_LOG, $mensaje_log, FILE_APPEND);
+    $mensaje_log  = "[{$marca_tiempo}] {$mensaje}\n";
+
+    $log_destino = MKTSKA_DEBUG_LOG;
+
+    // Si el archivo no existe o no es escribible, intentar en uploads
+    if ( ! ( file_exists( $log_destino ) && is_writable( $log_destino ) ) ) {
+        $upload_dir = wp_upload_dir();
+        $upload_log = trailingslashit( $upload_dir['basedir'] ) . 'mktdebug.log';
+
+        if ( ( file_exists( $upload_log ) && is_writable( $upload_log ) ) || is_writable( $upload_dir['basedir'] ) ) {
+            $log_destino = $upload_log;
+        }
+    }
+
+    if ( ( file_exists( $log_destino ) && is_writable( $log_destino ) ) || is_writable( dirname( $log_destino ) ) ) {
+        @file_put_contents( $log_destino, $mensaje_log, FILE_APPEND );
+    } else {
+        error_log( $mensaje_log );
+    }
 }
 
 /* Ejemplo de uso en init
