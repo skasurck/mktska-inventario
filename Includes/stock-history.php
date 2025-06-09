@@ -3,28 +3,52 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Historial de stock de producto
 add_action('woocommerce_product_set_stock', 'mktska_registrar_cambio_stock');
 add_action('woocommerce_variation_set_stock', 'mktska_registrar_cambio_stock');
 
-function mktska_registrar_cambio_stock($product) {
-    global $wpdb;
+function mktska_registrar_cambio_stock( $product ) {
+    global $wpdb, $mktska_skip_stock_history;
+
+    // Si la bandera está activa, el cambio fue esperado y no lo registramos aquí.
+    if ( isset($mktska_skip_stock_history) && $mktska_skip_stock_history === true ) {
+        $mktska_skip_stock_history = false;
+        return;
+    }
+
     $table_name = $wpdb->prefix . 'stock_history';
 
-    $stock_history[] = array(
-        'timestamp' => time(),
-        'stock' => (int) get_post_meta($product->get_id(), '_stock', true),
-        'stock_change_meta' => get_post_meta($product->get_id(), '_stock_change_meta', true)
+    // Obtener el stock "viejo" desde la base de datos (meta _stock)
+    $old_stock = (int) get_post_meta( $product->get_id(), '_stock', true );
+    // Obtener el stock "nuevo" directamente del objeto producto
+    $new_stock = (int) $product->get_stock_quantity();
+
+    // Si no hay cambio real, salir
+    if ( $old_stock === $new_stock ) {
+        return;
+    }
+
+    // Preparar meta indicando que es un cambio inesperado
+    $stock_change_meta = array(
+         'process' => 'Cambio inesperado',
+         'reason'  => 'Se detectó una variación en el stock no asociada a procesos esperados (ventas, cancelaciones o cambios manuales).'
     );
 
+    // Calcular la diferencia: old_stock - new_stock
+    // De este modo, si se reduce el stock, la diferencia será positiva (descuento)
+    // y si aumenta, negativa (aumento)
+    $difference = $old_stock - $new_stock;
+
+    // Insertar el registro en la tabla de historial
     $wpdb->insert(
         $table_name,
         array(
-            'timestamp' => current_time('mysql'),
-            'product_id' => $product->get_id(),
-            'stock' => end($stock_history)['stock'],
-            'new_stock' => $product->get_stock_quantity(),
-            'stock_change_meta' => maybe_serialize(end($stock_history)['stock_change_meta'])
-        )
+            'timestamp'         => current_time( 'mysql' ),
+            'product_id'        => $product->get_id(),
+            'stock'             => $old_stock,
+            'new_stock'         => $new_stock,
+            'quantity'          => $difference,
+            'stock_change_meta' => maybe_serialize( $stock_change_meta ),
+        ),
+        array( '%s', '%d', '%d', '%d', '%d', '%s' )
     );
 }
