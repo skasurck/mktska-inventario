@@ -37,7 +37,11 @@ function mktska_guardar_detalles_cancelacion($order_id) {
         $cancelled_by = wp_get_current_user()->user_login; // Usuario que canceló el pedido
 
         // Recuperar el producto y el inventario actual
-        $product   = wc_get_product( $product_id );
+        $product = wc_get_product( $product_id );
+        if ( ! $product ) {
+            mktska_escribir_log( "No se pudo obtener el producto con ID {$product_id}" );
+            continue;
+        }
         $old_stock = $product->get_stock_quantity(); // Inventario actual antes de la cancelación
         $new_stock = $old_stock + $quantity; // Nuevo inventario después de revertir la cantidad vendida
 
